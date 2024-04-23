@@ -1,6 +1,6 @@
 const API = {
     organizationList: "/orgsList",
-    analytics: "/api3/analitics",
+    analytics: "/api3/analytics",
     orgReqs: "/api3/reqBase",
     buhForms: "/api3/buh",
 };
@@ -11,13 +11,14 @@ async function run() {
         const orgOgrns = await sendRequestFetch(API.organizationList);
         const ogrns = orgOgrns.join(",");
 
-        const requisites = await sendRequestFetch(`${API.orgReqs}?ogrn=${ogrns}`);
+        const [requisites, analytics, buh] = await Promise.all([
+            sendRequestFetch(`${API.orgReqs}?ogrn=${ogrns}`),
+            sendRequestFetch(`${API.analytics}?ogrn=${ogrns}`),
+            sendRequestFetch(`${API.buhForms}?ogrn=${ogrns}`)
+        ]);
+
         const orgsMap = reqsToMap(requisites);
-
-        const analytics = await sendRequestFetch(`${API.analytics}?ogrn=${ogrns}`);
         addInOrgsMap(orgsMap, analytics, "analytics");
-
-        const buh = await sendRequestFetch(`${API.buhForms}?ogrn=${ogrns}`);
         addInOrgsMap(orgsMap, buh, "buhForms");
 
         render(orgsMap, orgOgrns);
@@ -25,6 +26,7 @@ async function run() {
         console.error(error);
     }
 }
+
 
 run();
 
