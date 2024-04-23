@@ -7,24 +7,23 @@ const API = {
 
 
 async function run() {
-    try {
-        const orgOgrns = await sendRequestFetch(API.organizationList);
-        const ogrns = orgOgrns.join(",");
+    const orgOgrns = await sendRequestFetch(API.organizationList);
+    const ogrns = orgOgrns.join(",");
 
-        const [requisites, analytics, buh] = await Promise.all([
-            sendRequestFetch(`${API.orgReqs}?ogrn=${ogrns}`),
-            sendRequestFetch(`${API.analytics}?ogrn=${ogrns}`),
-            sendRequestFetch(`${API.buhForms}?ogrn=${ogrns}`)
-        ]);
-
-        const orgsMap = reqsToMap(requisites);
-        addInOrgsMap(orgsMap, analytics, "analytics");
-        addInOrgsMap(orgsMap, buh, "buhForms");
-
-        render(orgsMap, orgOgrns);
-    } catch (error) {
-        console.error(error);
-    }
+    Promise.all([
+        sendRequestFetch(`${API.orgReqs}?ogrn=${ogrns}`),
+        sendRequestFetch(`${API.analytics}?ogrn=${ogrns}`),
+        sendRequestFetch(`${API.buhForms}?ogrn=${ogrns}`)
+    ])
+        .then(([requisites, analytics, buh]) => {
+            const orgsMap = reqsToMap(requisites);
+            addInOrgsMap(orgsMap, analytics, "analytics");
+            addInOrgsMap(orgsMap, buh, "buhForms");
+            render(orgsMap, orgOgrns);
+        })
+        .catch(error => {
+            console.error(error);
+        });
 }
 
 
@@ -50,18 +49,17 @@ function sendRequestPromise(url) {
 }
 
 async function sendRequestFetch(url) {
-    try {
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            throw new Error(`Request failed with status: ${response.status}`);
-        }
-
-        return await response.json();
-    } catch (error) {
-        alert(error.message);
-        console.error(error.message);
-    }
+    return fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Request failed with status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .catch(error => {
+            alert(error.message);
+            console.error(error.message);
+        })
 }
 
 
